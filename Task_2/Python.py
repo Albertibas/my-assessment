@@ -103,6 +103,14 @@ def question_1(df_balances):
 
     """
 
+    #Find the total number of entries/records in the dataframe
+
+    recordCount = len(df_balances)
+
+    #Return a subset of the dataframe containing only the entries where ScheduledRepayment is less than 
+
+    type1Defaults = df_balances[df_balances["
+
     return default_rate_percent
 
 
