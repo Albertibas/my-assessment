@@ -228,4 +228,16 @@ def question_4(df_balances):
 
     """
 
+    #The type 2 default metric is used here, indicating any loan that has missed more than 15% of payments in the year. It is very different from the type 1 value, and is more indicative of the chances of losing money overall. 
+
+    probability_of_default = question_2(df_scheduled, df_balances)
+
+    #The end of month 12's balances are used in this calculation
+
+    total_loan_balance = df_balances[df_balances['Month'] == 12]['LoanBalanceEnd'].sum()
+
+    recovery_rate = 0.8
+
+    total_loss = probability_of_default * total_loan_balance * (1 - recovery_rate)
+
     return total_loss
