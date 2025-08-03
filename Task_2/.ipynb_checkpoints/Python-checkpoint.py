@@ -143,9 +143,10 @@ def question_2(df_scheduled, df_balances):
         else:
             return False
 
+    #apply the sub-function to each group in order to know if the LoanID counts as a default
     type_2_defaults = df_balances.groupby('LoanID').apply(is_type_2)
 
-    type_2_count = type_2_defaults.sum()
+    type_2_count = type_2_defaults.sum() #counts the entries marked as True
     total_count = len(type_2_defaults)
 
     default_rate_percent = (type_2_count/total_count) * 100.0
@@ -169,6 +170,45 @@ def question_3(df_balances):
 
     """
 
+    #We wish to examine the entire dataframe in the sense of a portfolio
+    #It is first necessary to calculate the bulk values for each month in the year
+
+    df_monthly = df_balances.groupby('Month').sum(numeric_only=True)
+    
+    def smm_row(df_row):
+        #Payments less than or equal to interest payment will not contribute to principal
+        #Any payment MORE than the scheduled amount will count as unscheduled principal (as the interest is paid as part of the scheduled amount)
+        
+        unscheduled_principal = (df_row['ActualRepayment'] - df_row['InterestPayment']) - (df_row['ScheduledRepayment'] - df_row['InterestPayment'])
+
+        #This value can be positive or negative, indicating overpayment or underpayment towards principal amount
+
+        smm_row_value = unscheduled_principal/df_row['LoanBalanceStart']
+
+        return smm_row_value
+
+    #Calculate the SMM for each of the rows in the input data
+
+    SMM = df_monthly.apply(smm_row, axis = 1)
+    
+    def smm_mean(df_col):
+        col_plus = df_col + 1
+
+        col_prod =  np.prod(col_plus)
+
+        mean = pow(col_prod,(1/12)) - 1
+        return mean
+        
+    #Calculate the SMM mean over the entire column of SMM values
+    
+    SMM_mean = smm_mean(SMM.to_numpy())
+
+    #Calculate the cpr of the portfolio.
+
+    cpr = 1 - pow((1- SMM_mean),12)
+
+    cpr_percent = cpr * 100.0
+    
     return cpr_percent
 
 
