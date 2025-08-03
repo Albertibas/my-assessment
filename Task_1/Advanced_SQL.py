@@ -73,6 +73,10 @@ def question_3():
     Do not return the new table, just create it.
     """
 
+    #Two SQL statements are included into the same query.
+    #The first creates a table with the relevant information.
+    #The second copies data from three different tables into that table. 
+    
     qry = """
     CREATE TABLE financing (CustomerID INT, 
     Income DECIMAL,
@@ -87,7 +91,6 @@ def question_3():
     FROM customers AS c
     INNER JOIN loans AS l ON l.CustomerID = c.CustomerID
     INNER JOIN credit AS cr ON cr.CustomerID = c.CustomerID
-
     """
 
     return qry

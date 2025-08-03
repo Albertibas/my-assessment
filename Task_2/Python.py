@@ -194,7 +194,7 @@ def question_3(df_balances):
     def smm_mean(df_col):
         col_plus = df_col + 1
 
-        col_prod =  np.prod(col_plus)
+        col_prod =  np.prod(col_plus) #Takes the product of the entire column and returns a float value. 
 
         mean = pow(col_prod,(1/12)) - 1
         return mean
@@ -236,7 +236,7 @@ def question_4(df_balances):
 
     total_loan_balance = df_balances[df_balances['Month'] == 12]['LoanBalanceEnd'].sum()
 
-    recovery_rate = 0.8
+    recovery_rate = 0.8 #Value given in specification
 
     total_loss = probability_of_default * total_loan_balance * (1 - recovery_rate)
 
