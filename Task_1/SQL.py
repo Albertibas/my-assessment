@@ -23,7 +23,13 @@ def question_1():
     Return the `Name`, `Surname` and `CustomerID`
     """
 
-    qry = """____________________"""
+    #An inner query is defined which returns the number of times a customer's ID appears in the table as a field called id_count
+    #All rows where a duplicate ID appears will have the same id_count
+    #The outer query then filters the table based on rows where that count is larger than 1, meaning a duplicate entry exists.
+
+    qry = """
+    SELECT Name, Surname, CustomerID FROM ( SELECT c.*, COUNT(*) OVER (PARTITION BY CustomerID) as id_count FROM customers c) t WHERE id_count > 1
+    """
 
     return qry
 
@@ -33,7 +39,9 @@ def question_2():
     Return the `Name`, `Surname` and `Income` of all female customers in the dataset in descending order of income
     """
 
-    qry = """____________________"""
+    qry = """
+    SELECT Name, Surname, Income FROM customers WHERE Gender = 'Female' ORDER BY Income DESC
+    """
 
     return qry
 
@@ -45,7 +53,17 @@ def question_3():
     There is only 1 loan per customer ID.
     """
 
-    qry = """____________________"""
+    #A case statement is used to count the records where a loan has been approved.
+    #The percentage of approved loans is calculated and returned as a floating point value.
+    #A "ROUND" can be used to limit the decimal output.
+    #The GROUP BY statement applies the percentage calculation function separately for each loan term.
+
+    qry = """
+    SELECT LoanTerm, 
+    (100.0 * COUNT(CASE WHEN ApprovalStatus = 'Approved' THEN 1 END) / COUNT(*)) AS AcceptancePercentage 
+    from loans 
+    GROUP BY LoanTerm
+    """
 
     return qry
 
@@ -56,7 +74,10 @@ def question_4():
     Return columns `CustomerClass` and `Count`
     """
 
-    qry = """____________________"""
+
+    qry = """
+    SELECT CustomerClass, COUNT(*) as Count from credit GROUP BY CustomerClass
+    """
 
     return qry
 
