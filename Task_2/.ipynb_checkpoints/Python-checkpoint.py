@@ -103,6 +103,20 @@ def question_1(df_balances):
 
     """
 
+    #Group dataframe entries by loanID. The amount of repayments missed on a loan does not matter, even if one payment is missed
+    #the loan will be counted as a type 1.
+
+    type_1_defaults = df_balances.groupby('LoanID').apply(
+        lambda x: (x['ActualRepayment'] < x['ScheduledRepayment']).any()
+    ) 
+
+    #This object contains a list of loanID's with a boolean indicator of whether they have had a type 1 default
+
+    total_ids = len(type_1_defaults)
+    type_1_count = type_1_defaults.sum() #Counts the entries marked as True
+
+    default_rate_percent = (type_1_count/total_ids) * 100.0
+
     return default_rate_percent
 
 
@@ -118,6 +132,24 @@ def question_2(df_scheduled, df_balances):
         float: The percentage of type 2 defaulted loans (ie 50.0 not 0.5)
 
     """
+
+    #sub-function to determine whether a given pandas groupby has more than 15% missed payments.
+    def is_type_2(df_group):
+        total_expected = len(df_group)
+        missed = (df_group['ActualRepayment'] < df_group['ScheduledRepayment']).sum() 
+        default_ratio = missed/total_expected
+        if default_ratio > 0.15:
+            return True
+        else:
+            return False
+
+    type_2_defaults = df_balances.groupby('LoanID').apply(is_type_2)
+
+    type_2_count = type_2_defaults.sum()
+    total_count = len(type_2_defaults)
+
+    default_rate_percent = (type_2_count/total_count) * 100.0
+    
 
     return default_rate_percent
 
