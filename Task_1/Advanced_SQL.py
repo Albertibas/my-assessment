@@ -22,7 +22,14 @@ def question_1():
     Make use of a JOIN to find the `AverageIncome` per `CustomerClass`
     """
 
-    qry = """____________________"""
+    #Join the credit and customer tables using CustomerID as the link. (1-to-1 relationship)
+    #The group by applies the average function per class
+
+    qry = """
+    SELECT AVG(cu.Income) as AverageIncome, cr.CustomerClass FROM customers AS cu 
+    INNER JOIN credit AS cr ON cr.CustomerID = cu.CustomerID 
+    GROUP BY CustomerClass
+    """
 
     return qry
 
@@ -33,7 +40,27 @@ def question_2():
     Ensure consistent use of either the abbreviated or full version of each province, matching the format found in the customer table.
     """
 
-    qry = """____________________"""
+    #Join of tables "customers" and "loans" in order to get rejections by province. 
+    #Use multiple clause CASE to standardize the naming of provinces
+
+    qry = """
+    SELECT Count(l.ApprovalStatus) AS RejectedApplications, 
+    CASE
+        WHEN UPPER(c.Region) IN ('LP','LIMPOPO') THEN 'LP'
+        WHEN UPPER(c.Region) IN ('KZN','KWAZULU-NATAL') THEN 'KZN'
+        WHEN UPPER(c.Region) IN ('FS','FREESTATE') THEN 'FS'
+        WHEN UPPER(c.Region) IN ('EC','EASTERNCAPE') THEN 'EC'
+        WHEN UPPER(c.Region) IN ('WC','WESTERNCAPE') THEN 'WC'
+        WHEN UPPER(c.Region) IN ('NC','NORTHERNCAPE') THEN 'NC'
+        WHEN UPPER(c.Region) IN ('NW','NORTHWEST','NORTH-WEST') THEN 'NW'
+        WHEN UPPER(c.Region) IN ('GT','GAUTENG') THEN 'GT'
+        WHEN UPPER(c.Region) IN ('MP','MPUMALANGA') THEN 'MP'
+    END AS Province 
+    FROM customers AS c 
+    INNER JOIN loans AS l ON l.CustomerID = c.CustomerID
+    WHERE l.ApprovalStatus = 'Rejected'
+    GROUP BY Province
+    """
 
     return qry
 
