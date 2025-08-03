@@ -109,7 +109,37 @@ def question_4():
     Hint: there should be 12x CustomerID = 1.
     """
 
-    qry = """____________________"""
+    #It should be noted that the answers for Question 4 to 7 make heavy use of Artificial Intelligence LLM's
+
+    qry = """
+    
+    CREATE TABLE timeline AS
+    SELECT -- Use Coalesce to insert zeroes where needed
+    c.CustomerID, m.MonthName, COALESCE(r.num_repayments, 0)   AS NumberOfRepayments, COALESCE(r.total_amount,   0.0) AS AmountTotal
+    FROM
+    customers AS c
+    CROSS JOIN months AS m
+    LEFT JOIN (
+        SELECT CustomerID,
+        EXTRACT(MONTH FROM (RepaymentDate AT TIME ZONE TimeZone) AT TIME ZONE 'Europe/London')::INT AS month_id,
+            COUNT(*)    AS num_repayments,
+            SUM(Amount) AS total_amount
+        FROM
+            repayments
+        WHERE
+            ((RepaymentDate AT TIME ZONE TimeZone) AT TIME ZONE 'Europe/London')::time
+                BETWEEN '06:00' AND '18:00'
+        GROUP BY
+            CustomerID,
+            month_id
+    ) AS r
+      ON c.CustomerID = r.CustomerID
+     AND m.MonthID    = r.month_id
+    ORDER BY
+    c.CustomerID,
+    m.MonthID;
+    
+    """
 
     return qry
 
@@ -123,7 +153,65 @@ def question_5():
     Hint: there should be 1x CustomerID = 1
     """
 
-    qry = """____________________"""
+    qry = """
+SELECT
+  CustomerID,
+
+  -- January
+  SUM(CASE WHEN MonthName = 'January'   THEN NumberOfRepayments ELSE 0 END)::INT AS JanuaryRepayments,
+  SUM(CASE WHEN MonthName = 'January'   THEN AmountTotal        ELSE 0 END)        AS JanuaryTotal,
+
+  -- February
+  SUM(CASE WHEN MonthName = 'February'  THEN NumberOfRepayments ELSE 0 END)::INT AS FebruaryRepayments,
+  SUM(CASE WHEN MonthName = 'February'  THEN AmountTotal        ELSE 0 END)        AS FebruaryTotal,
+
+  -- March
+  SUM(CASE WHEN MonthName = 'March'     THEN NumberOfRepayments ELSE 0 END)::INT AS MarchRepayments,
+  SUM(CASE WHEN MonthName = 'March'     THEN AmountTotal        ELSE 0 END)        AS MarchTotal,
+
+  -- April
+  SUM(CASE WHEN MonthName = 'April'     THEN NumberOfRepayments ELSE 0 END)::INT AS AprilRepayments,
+  SUM(CASE WHEN MonthName = 'April'     THEN AmountTotal        ELSE 0 END)        AS AprilTotal,
+
+  -- May
+  SUM(CASE WHEN MonthName = 'May'       THEN NumberOfRepayments ELSE 0 END)::INT AS MayRepayments,
+  SUM(CASE WHEN MonthName = 'May'       THEN AmountTotal        ELSE 0 END)        AS MayTotal,
+
+  -- June
+  SUM(CASE WHEN MonthName = 'June'      THEN NumberOfRepayments ELSE 0 END)::INT AS JuneRepayments,
+  SUM(CASE WHEN MonthName = 'June'      THEN AmountTotal        ELSE 0 END)        AS JuneTotal,
+
+  -- July
+  SUM(CASE WHEN MonthName = 'July'      THEN NumberOfRepayments ELSE 0 END)::INT AS JulyRepayments,
+  SUM(CASE WHEN MonthName = 'July'      THEN AmountTotal        ELSE 0 END)        AS JulyTotal,
+
+  -- August
+  SUM(CASE WHEN MonthName = 'August'    THEN NumberOfRepayments ELSE 0 END)::INT AS AugustRepayments,
+  SUM(CASE WHEN MonthName = 'August'    THEN AmountTotal        ELSE 0 END)        AS AugustTotal,
+
+  -- September
+  SUM(CASE WHEN MonthName = 'September' THEN NumberOfRepayments ELSE 0 END)::INT AS SeptemberRepayments,
+  SUM(CASE WHEN MonthName = 'September' THEN AmountTotal        ELSE 0 END)        AS SeptemberTotal,
+
+  -- October
+  SUM(CASE WHEN MonthName = 'October'   THEN NumberOfRepayments ELSE 0 END)::INT AS OctoberRepayments,
+  SUM(CASE WHEN MonthName = 'October'   THEN AmountTotal        ELSE 0 END)        AS OctoberTotal,
+
+  -- November
+  SUM(CASE WHEN MonthName = 'November'  THEN NumberOfRepayments ELSE 0 END)::INT AS NovemberRepayments,
+  SUM(CASE WHEN MonthName = 'November'  THEN AmountTotal        ELSE 0 END)        AS NovemberTotal,
+
+  -- December
+  SUM(CASE WHEN MonthName = 'December'  THEN NumberOfRepayments ELSE 0 END)::INT AS DecemberRepayments,
+  SUM(CASE WHEN MonthName = 'December'  THEN AmountTotal        ELSE 0 END)        AS DecemberTotal
+
+FROM
+  timeline
+GROUP BY
+  CustomerID
+ORDER BY
+  CustomerID;
+    """
 
     return qry
 
@@ -144,7 +232,37 @@ def question_6():
     Also return a result set for this table (ie SELECT * FROM corrected_customers)
     """
 
-    qry = """____________________"""
+    qry = """
+        -- 1) Build the corrected_customers table
+        CREATE TABLE corrected_customers AS
+        WITH numbered AS (
+          SELECT
+            CustomerID,
+            Age,
+            Gender,
+            ROW_NUMBER()   OVER (PARTITION BY Gender ORDER BY CustomerID) AS rn,
+            COUNT(*)       OVER (PARTITION BY Gender)             AS cnt
+          FROM customers
+        )
+        SELECT
+          c1.CustomerID,
+          c1.Age                           AS Age,
+          
+          -- compute the shifting index: (rn − 3) mod cnt + 1
+          c2.Age                           AS CorrectedAge,
+          
+          c1.Gender
+        FROM numbered AS c1
+        JOIN numbered AS c2
+          ON c1.Gender = c2.Gender
+         AND c2.rn = ((c1.rn + c1.cnt - 3) % c1.cnt) + 1
+        ORDER BY
+          c1.Gender,
+          c1.CustomerID
+        ;
+        
+        SELECT * FROM corrected_customers
+    """
 
     return qry
 
@@ -165,6 +283,74 @@ def question_7():
     Return columns: `CustomerID`, `Age`, `CorrectedAge`, `Gender`, `AgeCategory`, `Rank`
     """
 
-    qry = """____________________"""
+    qry = """
+            -- 1) Add the two new columns
+        ALTER TABLE corrected_customers
+          ADD COLUMN AgeCategory TEXT;
+
+        ALTER TABLE corrected_customers
+          ADD COLUMN Rank INTEGER;
+        
+        -- 2) Populate AgeCategory by corrected age
+        UPDATE corrected_customers
+        SET AgeCategory = CASE
+            WHEN CorrectedAge < 20              THEN 'Teen'
+            WHEN CorrectedAge >= 20
+              AND CorrectedAge < 30            THEN 'Young Adult'
+            WHEN CorrectedAge >= 30
+              AND CorrectedAge < 60            THEN 'Adult'
+            WHEN CorrectedAge >= 60             THEN 'Pensioner'
+            ELSE 'Unknown'
+          END;
+        
+        -- 3) Build a helper CTE to count each customer’s repayments
+        WITH repay_counts AS (
+          SELECT
+            CustomerID,
+            COUNT(*) AS cnt
+          FROM repayments
+          -- (optional: re‐apply your 06:00–18:00 London‐time filter here if needed)
+          GROUP BY CustomerID
+        ),
+        
+        -- 4) Join counts into corrected_customers, defaulting to zero
+        with_counts AS (
+          SELECT
+            cc.CustomerID,
+            cc.Age,
+            cc.CorrectedAge,
+            cc.Gender,
+            cc.AgeCategory,
+            COALESCE(rc.cnt, 0) AS repay_count
+          FROM
+            corrected_customers AS cc
+            LEFT JOIN repay_counts AS rc USING (CustomerID)
+        )
+        
+        -- 5) Use DENSE_RANK over each AgeCategory (highest repay_count → rank=1)
+        UPDATE corrected_customers AS dst
+        SET Rank = src.rnk
+        FROM (
+          SELECT
+            CustomerID,
+            DENSE_RANK() OVER (
+              PARTITION BY AgeCategory
+              ORDER BY repay_count DESC
+            ) AS rnk
+          FROM with_counts
+        ) AS src
+        WHERE dst.CustomerID = src.CustomerID;
+        
+        -- 6) Finally, see the results
+        SELECT
+          CustomerID,
+          Age,
+          CorrectedAge,
+          Gender,
+          AgeCategory,
+          Rank
+        FROM corrected_customers
+        ORDER BY AgeCategory, Rank, CustomerID;
+    """
 
     return qry
