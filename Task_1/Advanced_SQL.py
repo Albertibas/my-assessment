@@ -78,7 +78,7 @@ def question_3():
     #The second copies data from three different tables into that table. 
     
     qry = """
-    CREATE TABLE financing (CustomerID INT, 
+    CREATE TABLE financing (CustomerID INT, --CustomerID not used as primary key, due to duplicates in database.
     Income DECIMAL,
     LoanAmount DECIMAL,
     LoanTerm INT,
@@ -208,8 +208,6 @@ SELECT
 FROM
   timeline
 GROUP BY
-  CustomerID
-ORDER BY
   CustomerID;
     """
 
@@ -303,13 +301,12 @@ def question_7():
             ELSE 'Unknown'
           END;
         
-        -- 3) Build a helper CTE to count each customer’s repayments
+        -- 3) Build a helper expression to count each customer’s repayments
         WITH repay_counts AS (
           SELECT
             CustomerID,
             COUNT(*) AS cnt
           FROM repayments
-          -- (optional: re‐apply your 06:00–18:00 London‐time filter here if needed)
           GROUP BY CustomerID
         ),
         
